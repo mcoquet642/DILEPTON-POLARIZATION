@@ -194,7 +194,256 @@ namespace DileptonRates{
         
     }
     
+
+    void CalculateRate_dNdQv2(double QMin,double QMax,int NQBins,int NSamples,double Weight,double Xi,double TEff,double qSupp,double wTilde,double *dNlld4xd4Q){
+        
+        double dQ=(QMax-QMin)/double(NQBins);
+        
+        // SAMPLE DILEPTON PRODUCTION //
+        for(int i=0;i<NSamples;i++){
+            
+            double p1Min=0.0; double p1Max=12.0*TEff;
+            double p2Min=0.0; double p2Max=12.0*TEff;
+
+            // SAMPLE MOMENTA p1,p2,p3 //
+            double p1=(p1Max-p1Min)*drand48()+p1Min;
+            double p2=(p2Max-p2Min)*drand48()+p2Min;
+
+            double Cos1=2.0*drand48()-1.0;
+            double Cos2=2.0*drand48()-1.0;
+            
+            double Phi1=2.0*M_PI*drand48();
+            double Phi2=2.0*M_PI*drand48();
+
+            double PhiLept=2.0*M_PI*drand48();
+            
+            double p1Vec[3]={p1*sqrt(1.0-Cos1*Cos1)*cos(Phi1),p1*sqrt(1.0-Cos1*Cos1)*sin(Phi1),p1*Cos1};
+            double p2Vec[3]={p2*sqrt(1.0-Cos2*Cos2)*cos(Phi2),p2*sqrt(1.0-Cos2*Cos2)*sin(Phi2),p2*Cos2};
+            
+            double pT1=sqrt(p1Vec[0]*p1Vec[0]+p1Vec[1]*p1Vec[1]);
+            double yP1=atanh(p1Vec[2]/p1);
+            
+            double pT2=sqrt(p2Vec[0]*p2Vec[0]+p2Vec[1]*p2Vec[1]);
+            double yP2=atanh(p2Vec[2]/p2);
+            
+            // GET PHASE SPACE DISTRIBUTION //
+            double f1Q=PhaseSpaceDistribution::fQ(pT1,yP1,0.0,Xi,TEff,qSupp);
+            double f2Q=PhaseSpaceDistribution::fQ(pT2,yP2,0.0,Xi,TEff,qSupp);
+            
+            
+                // CALCULATE DILEPTON ENERGY AND MOMENTUM //
+                double q0=p1+p2;
+                double qVec[3]={p1Vec[0]+p2Vec[0],p1Vec[1]+p2Vec[1],p1Vec[2]+p2Vec[2]};
+                double q=sqrt(qVec[0]*qVec[0]+qVec[1]*qVec[1]+qVec[2]*qVec[2]);
+		double qz=qVec[2];
+		double qT=sqrt(qVec[0]*qVec[0]+qVec[1]*qVec[1]);
+		double yQ = atanh(qz/q);
+
+                // GET INVARIANT MASS QSqr //
+                double QSqr=q0*q0-q*q; double Q=sqrt(QSqr);
+
+		// FIXING AVAILABLE PHASE SPACE FOR RELATIVE MOMENTUM sLept //
+	        double sLeptMin=0.0; double sLeptMax=sqrt(QSqr - 4*mllSqr);
+		// MAGNITUDE OF sLept ORTHOGONAL TO Vec{q} //
+        	double sLeptQPerp=(sLeptMax-sLeptMin)*drand48()+sLeptMin;
+
+		double CosThetaQ = qz / q;
+		double SinThetaQ = sqrt(1 - CosThetaQ*CosThetaQ);
+                
+		// UNIT VECTORS ALONG Vec{q}, Z AND ORTHOGONAL DIRECTION //
+	        double eq[3];
+	        eq[0]=qVec[0]/q;
+        	eq[1]=qVec[1]/q;
+	        eq[2]=qVec[2]/q;
+
+	        double el[3];
+	        el[0]=(0.0-CosThetaQ*eq[0])/SinThetaQ;
+        	el[1]=(0.0-CosThetaQ*eq[1])/SinThetaQ;
+	        el[2]=(1.0-CosThetaQ*eq[2])/SinThetaQ;
+
+
+	        double et[3];
+        	et[0]=(eq[1]*el[2]-eq[2]*el[1]);
+	        et[1]=(eq[2]*el[0]-eq[0]*el[2]);
+	        et[2]=(eq[0]*el[1]-eq[1]*el[0]);
+
+
+                // SET JACOBIANS FOR NUMERICAL INTEGRATION MEASUERES \int d^3p/((2pi)^3 2p)  //
+                double Jacobian=(4.0*M_PI*p1*p1)/(2.0*p1)*(4.0*M_PI*p2*p2)/(2.0*p2)*(p1Max-p1Min)*(p2Max-p2Min)/std::pow(2.0*M_PI,6)*std::pow(2.0*M_PI,4);
+                
+		// POSITIVE VALUE sLept ALONG Vec{q} //
+		double sLeptQ = sqrt((QSqr-4*mllSqr-sLeptQPerp*sLeptQPerp)/(1-q*q/(q0*q0)));
+		double sLept0 = sLeptQ * q / q0;
+
+		// NEGATIVE VALUE sLept ALONG Vec{q} //
+		double sLeptQNeg = -1. * sqrt((QSqr-4*mllSqr-sLeptQPerp*sLeptQPerp)/(1-q*q/(q0*q0)));
+		double sLept0Neg = sLeptQNeg * q / q0;
+	
+		// sLept RELATIVE MOMETNUM BETWEEN LEPTONS, FOR POSITIVE sLeptQ // 
+		double sLeptVec[3]={sLeptQ * eq[0] + sLeptQPerp*cos(PhiLept)*el[0] + sLeptQPerp*sin(PhiLept)*et[0], sLeptQ * eq[1] + sLeptQPerp*cos(PhiLept)*el[1] + sLeptQPerp*sin(PhiLept)*et[1], sLeptQ * eq[2] + sLeptQPerp*cos(PhiLept)*el[2] + sLeptQPerp*sin(PhiLept)*et[2]};
+		// sLept RELATIVE MOMETNUM BETWEEN LEPTONS, FOR NEGATIVE sLeptQ //
+		double sLeptVecNeg[3]={sLeptQNeg * eq[0] + sLeptQPerp*cos(PhiLept)*el[0] + sLeptQPerp*sin(PhiLept)*et[0], sLeptQNeg * eq[1] + sLeptQPerp*cos(PhiLept)*el[1] + sLeptQPerp*sin(PhiLept)*et[1], sLeptQNeg * eq[2] + sLeptQPerp*cos(PhiLept)*el[2] + sLeptQPerp*sin(PhiLept)*et[2]};
+		//tQuark RELATIVE MOMENTUM BETWEEN QUARKS //
+		double tQuarkVec[3]= {p1Vec[0]-p2Vec[0], p1Vec[1]-p2Vec[1], p1Vec[2]-p2Vec[2]};
+
+                // GET PRE-FACTOR //
+                double PreFactor=4*alphaEM*alphaEM/std::pow(2.0*M_PI,4)/(QSqr*QSqr)*qFSqrSum*2*M_PI*sLeptQPerp*(sLeptMax-sLeptMin)/sqrt(1-q*q/(q0*q0))/sqrt(QSqr - 4*mllSqr - sLeptQPerp*sLeptQPerp)/(4*q0)/2;
+
+                // MATRIX ELEMENT //
+                double M2qqGammaStar=0;
+		if (sLept0 > -q0){
+                	M2qqGammaStar=4*Nc*(QSqr*QSqr + std::pow((sLept0*(p1-p2) - sLeptVec[0]*tQuarkVec[0] - sLeptVec[1]*tQuarkVec[1] - sLeptVec[2]*tQuarkVec[2]),2) + 2*mllSqr*(QSqr - sLept0*sLept0 + sLeptVec[0]*sLeptVec[0] + sLeptVec[1]*sLeptVec[1] + sLeptVec[2]*sLeptVec[2]));
+		}
+		double M2qqGammaStarNeg=0;
+		if (sLept0Neg > -q0){
+                	M2qqGammaStarNeg=4*Nc*(QSqr*QSqr + std::pow((sLept0Neg*(p1-p2) - sLeptVecNeg[0]*tQuarkVec[0] - sLeptVecNeg[1]*tQuarkVec[1] - sLeptVecNeg[2]*tQuarkVec[2]),2) + 2*mllSqr*(QSqr - sLept0Neg*sLept0Neg + sLeptVecNeg[0]*sLeptVecNeg[0] + sLeptVecNeg[1]*sLeptVecNeg[1] + sLeptVecNeg[2]*sLeptVecNeg[2]));
+		}
+                
+                // POLARIZATION TENSOR //
+                double TracePi=f1Q*f2Q*(M2qqGammaStar+M2qqGammaStarNeg);
+                
+                
+                // GET BIN AND UPDATE DILEPTON RATE //
+                int iQ=int((Q-QMin)/dQ);
+                
+                if(iQ>=0 && iQ<=NQBins-1){
+                    dNlld4xd4Q[iQ]+=Weight*Jacobian*PreFactor*TracePi;
+                }
+	}
+    }
+            
     
+    void CalculateRate_dNdCosalpha(int NBins,int NSamples,double Weight,double Xi,double TEff,double qSupp,double wTilde,double *dNlld4xd4Q){
+        
+        double dC=2./double(NBins);
+        
+        // SAMPLE DILEPTON PRODUCTION //
+        for(int i=0;i<NSamples;i++){
+            
+            double p1Min=0.0; double p1Max=12.0*TEff;
+            double p2Min=0.0; double p2Max=12.0*TEff;
+
+            // SAMPLE MOMENTA p1,p2,p3 //
+            double p1=(p1Max-p1Min)*drand48()+p1Min;
+            double p2=(p2Max-p2Min)*drand48()+p2Min;
+
+            double Cos1=2.0*drand48()-1.0;
+            double Cos2=2.0*drand48()-1.0;
+            
+            double Phi1=2.0*M_PI*drand48();
+            double Phi2=2.0*M_PI*drand48();
+
+            double PhiLept=2.0*M_PI*drand48();
+            
+            double p1Vec[3]={p1*sqrt(1.0-Cos1*Cos1)*cos(Phi1),p1*sqrt(1.0-Cos1*Cos1)*sin(Phi1),p1*Cos1};
+            double p2Vec[3]={p2*sqrt(1.0-Cos2*Cos2)*cos(Phi2),p2*sqrt(1.0-Cos2*Cos2)*sin(Phi2),p2*Cos2};
+            
+            double pT1=sqrt(p1Vec[0]*p1Vec[0]+p1Vec[1]*p1Vec[1]);
+            double yP1=atanh(p1Vec[2]/p1);
+            
+            double pT2=sqrt(p2Vec[0]*p2Vec[0]+p2Vec[1]*p2Vec[1]);
+            double yP2=atanh(p2Vec[2]/p2);
+            
+            // GET PHASE SPACE DISTRIBUTION //
+            double f1Q=PhaseSpaceDistribution::fQ(pT1,yP1,0.0,Xi,TEff,qSupp);
+            double f2Q=PhaseSpaceDistribution::fQ(pT2,yP2,0.0,Xi,TEff,qSupp);
+            
+            
+                // CALCULATE DILEPTON ENERGY AND MOMENTUM //
+                double q0=p1+p2;
+                double qVec[3]={p1Vec[0]+p2Vec[0],p1Vec[1]+p2Vec[1],p1Vec[2]+p2Vec[2]};
+                double q=sqrt(qVec[0]*qVec[0]+qVec[1]*qVec[1]+qVec[2]*qVec[2]);
+		double qz=qVec[2];
+		double qT=sqrt(qVec[0]*qVec[0]+qVec[1]*qVec[1]);
+		double yQ = atanh(qz/q);
+
+                // GET INVARIANT MASS QSqr //
+                double QSqr=q0*q0-q*q; double Q=sqrt(QSqr);
+                
+		// FIXING AVAILABLE PHASE SPACE FOR RELATIVE MOMENTUM sLept //
+                double sLeptMin=0.0; double sLeptMax=sqrt(QSqr - 4*mllSqr);
+		// MAGNITUDE OF sLept ORTHOGONAL to Vec{q}
+                double sLeptQPerp=(sLeptMax-sLeptMin)*drand48()+sLeptMin;
+
+		double CosThetaQ = qz / q;
+		double SinThetaQ = sqrt(1 - CosThetaQ*CosThetaQ);
+                
+		// UNIT VECTORS ALONG Vec{q}, Z AND ORTHOGONAL DIRECTION
+	        double eq[3];
+	        eq[0]=qVec[0]/q;
+        	eq[1]=qVec[1]/q;
+	        eq[2]=qVec[2]/q;
+
+
+	        double el[3];
+	        el[0]=(0.0-CosThetaQ*eq[0])/SinThetaQ;
+        	el[1]=(0.0-CosThetaQ*eq[1])/SinThetaQ;
+	        el[2]=(1.0-CosThetaQ*eq[2])/SinThetaQ;
+
+
+	        double et[3];
+        	et[0]=(eq[1]*el[2]-eq[2]*el[1]);
+	        et[1]=(eq[2]*el[0]-eq[0]*el[2]);
+	        et[2]=(eq[0]*el[1]-eq[1]*el[0]);
+
+
+                // SET JACOBIANS FOR NUMERICAL INTEGRATION MEASUERES \int d^3p/((2pi)^3 2p)  //
+                double Jacobian=(4.0*M_PI*p1*p1)/(2.0*p1)*(4.0*M_PI*p2*p2)/(2.0*p2)*(p1Max-p1Min)*(p2Max-p2Min)/std::pow(2.0*M_PI,6)*std::pow(2.0*M_PI,4);
+                
+		double sLeptQ = sqrt((QSqr-4*mllSqr-sLeptQPerp*sLeptQPerp)/(1-q*q/(q0*q0))); //sLept ALONG Vec{q}
+		double sLept0 = sLeptQ * q / q0;
+
+		double sLeptQNeg = -1. * sqrt((QSqr-4*mllSqr-sLeptQPerp*sLeptQPerp)/(1-q*q/(q0*q0))); //NEGATIVE VALUE of sLept ALONG Vec{q} ALSO ALLOWED
+		double sLept0Neg = sLeptQNeg * q / q0;
+
+		//sLept RELATIVE MOMETNUM BETWEEN LEPTONS, FOR POSITIVE sLeptQ //	
+		double sLeptVec[3]={sLeptQ * eq[0] + sLeptQPerp*cos(PhiLept)*el[0] + sLeptQPerp*sin(PhiLept)*et[0], sLeptQ * eq[1] + sLeptQPerp*cos(PhiLept)*el[1] + sLeptQPerp*sin(PhiLept)*et[1], sLeptQ * eq[2] + sLeptQPerp*cos(PhiLept)*el[2] + sLeptQPerp*sin(PhiLept)*et[2]};
+		//sLept RELATIVE MOMETNUM BETWEEN LEPTONS, FOR NEGATIVE sLeptQ //	
+		double sLeptVecNeg[3]={sLeptQNeg * eq[0] + sLeptQPerp*cos(PhiLept)*el[0] + sLeptQPerp*sin(PhiLept)*et[0], sLeptQNeg * eq[1] + sLeptQPerp*cos(PhiLept)*el[1] + sLeptQPerp*sin(PhiLept)*et[1], sLeptQNeg * eq[2] + sLeptQPerp*cos(PhiLept)*el[2] + sLeptQPerp*sin(PhiLept)*et[2]};
+		//tQuark RELATIVE MOMENTUM BETWEEN QUARKS //
+		double tQuarkVec[3]= {p1Vec[0]-p2Vec[0], p1Vec[1]-p2Vec[1], p1Vec[2]-p2Vec[2]};
+
+		// sLept TRANSVERSE TO Z //
+		double sLeptPerp = sqrt(sLeptVec[0]*sLeptVec[0] + sLeptVec[1]*sLeptVec[1]);
+		double sLeptPerpNeg = sqrt(sLeptVecNeg[0]*sLeptVecNeg[0] + sLeptVecNeg[1]*sLeptVecNeg[1]);
+
+		// ANGLE BETWEEN sLept AND sLeptPerp //
+		double cosalpha = sLeptVec[2] / sqrt(sLeptVec[2]*sLeptVec[2] + sLeptPerp*sLeptPerp);
+		double cosalphaNeg = sLeptVecNeg[2] / sqrt(sLeptVecNeg[2]*sLeptVecNeg[2] + sLeptPerpNeg*sLeptPerpNeg);
+
+                // GET PRE-FACTOR (CONTAINING JACOBIANS FOR LEPTON TENSOR INTEGRATION) //
+                double PreFactor=4*alphaEM*alphaEM/std::pow(2.0*M_PI,4)/(QSqr*QSqr)*qFSqrSum*2*M_PI*sLeptQPerp*(sLeptMax-sLeptMin)/sqrt(1-q*q/(q0*q0))/sqrt(QSqr - 4*mllSqr - sLeptQPerp*sLeptQPerp)/(4*q0)/2;
+
+                // MATRIX ELEMENT //
+                double M2qqGammaStar=0;
+		if (sLept0 > -q0){
+                	M2qqGammaStar=4*Nc*(QSqr*QSqr + std::pow((sLept0*(p1-p2) - sLeptVec[0]*tQuarkVec[0] - sLeptVec[1]*tQuarkVec[1] - sLeptVec[2]*tQuarkVec[2]),2) + 2*mllSqr*(QSqr - sLept0*sLept0 + sLeptVec[0]*sLeptVec[0] + sLeptVec[1]*sLeptVec[1] + sLeptVec[2]*sLeptVec[2]));
+		}
+		double M2qqGammaStarNeg=0;
+		if (sLept0Neg > -q0){
+                	M2qqGammaStarNeg=4*Nc*(QSqr*QSqr + std::pow((sLept0Neg*(p1-p2) - sLeptVecNeg[0]*tQuarkVec[0] - sLeptVecNeg[1]*tQuarkVec[1] - sLeptVecNeg[2]*tQuarkVec[2]),2) + 2*mllSqr*(QSqr - sLept0Neg*sLept0Neg + sLeptVecNeg[0]*sLeptVecNeg[0] + sLeptVecNeg[1]*sLeptVecNeg[1] + sLeptVecNeg[2]*sLeptVecNeg[2]));
+		}
+                
+                // POLARIZATION TENSOR //
+                double TracePi=f1Q*f2Q*M2qqGammaStar;
+                double TracePiNeg=f1Q*f2Q*M2qqGammaStarNeg;
+                
+                
+                // GET BIN AND UPDATE DILEPTON RATE //
+                int iC=int((cosalpha+1)/dC);
+                int iCNeg=int((cosalphaNeg+1)/dC);
+                
+                if(iC>=0 && iC<=NBins-1){
+                    dNlld4xd4Q[iC]+=Weight*Jacobian*PreFactor*TracePi;
+                }
+                
+                if(iCNeg>=0 && iCNeg<=NBins-1){
+                    dNlld4xd4Q[iCNeg]+=Weight*Jacobian*PreFactor*TracePiNeg;
+                }
+	}
+    }
+
+
     // CREATE OUTPUT OF dN/d4xdQ //
     void CreatedNdQOutput(double QMin,double QMax,int NQBins,int NSamples,double Xi,double TEff,double qSupp,double wTilde,std::string fname){
         
@@ -241,6 +490,92 @@ namespace DileptonRates{
             
             double Q=QMin+(iQ+0.5)*dQ;
             OutStream << Q << " " << dNlld4xd4Q_LO[iQ]/dQ << " " << GetAnalyticLORate(Q,TEff) << " "  << dNlld4xd4Q_NLO_A[iQ]/dQ << " "  << dNlld4xd4Q_NLO_B[iQ]/dQ << std::endl;
+        }
+        
+        OutStream.close();
+        
+    }
+
+    void CreatedNdQOutputCompare(double QMin,double QMax,int NQBins,int NSamples,double Xi,double TEff,double qSupp,double wTilde,std::string fname){
+        
+        
+        // SET UP BINNING IN INVARIANT MASS Q //
+        double *dNlld4xd4Q=new double[NQBins];
+
+        double *dNlld4xd4Q_LO=new double[NQBins];
+        double *dNlld4xd4Q_NLO_A=new double[NQBins];
+        double *dNlld4xd4Q_NLO_B=new double[NQBins];
+
+        
+        for(int iQ=0;iQ<NQBins;iQ++){
+            dNlld4xd4Q[iQ]=0.0;
+            dNlld4xd4Q_LO[iQ]=0.0;
+            dNlld4xd4Q_NLO_A[iQ]=0.0;
+            dNlld4xd4Q_NLO_B[iQ]=0.0;
+
+        }
+        // CALCULATE RATE //
+        CalculateRate_dNdQv2(QMin,QMax,NQBins,NSamples,1.0,Xi,TEff,qSupp,wTilde,dNlld4xd4Q);
+        CalculateRate_dNdQ(QMin,QMax,NQBins,NSamples,1.0,Xi,TEff,qSupp,wTilde,dNlld4xd4Q_LO,dNlld4xd4Q_NLO_A,dNlld4xd4Q_NLO_B);
+
+        // NORMALIZE TO NUMBER OF SAMPLES //
+        for(int iQ=0;iQ<NQBins;iQ++){
+            
+            dNlld4xd4Q[iQ] /=double(NSamples);
+            dNlld4xd4Q_LO[iQ] /=double(NSamples);
+        }
+        
+        
+        // CREATE OUTPUT //
+        std::ofstream OutStream;
+        OutStream.open(fname.c_str());
+        
+        OutStream << "#wTilde=" << wTilde << " #Xi=" << Xi << " #TEff=" << TEff << " #qSupp=" << qSupp << std::endl;
+        
+        double dQ=(QMax-QMin)/double(NQBins);
+        
+        for(int iQ=0;iQ<NQBins;iQ++){
+            
+            double Q=QMin+(iQ+0.5)*dQ;
+            OutStream << Q << " "<< dNlld4xd4Q[iQ]/dQ << " " << dNlld4xd4Q_LO[iQ]/dQ << " " << GetAnalyticLORate(Q,TEff) << std::endl;
+        }
+        
+        OutStream.close();
+        
+    }
+
+    void CreatedNdCosalphaOutput(int NBins,int NSamples,double Xi,double TEff,double qSupp,double wTilde,std::string fname){
+        
+        
+        // SET UP BINNING IN INVARIANT MASS Q //
+        double *dNlld4xd4Q=new double[NBins];
+
+        
+        for(int iC=0;iC<NBins;iC++){
+            dNlld4xd4Q[iC]=0.0;
+        }
+        // CALCULATE RATE //
+        CalculateRate_dNdCosalpha(NBins,NSamples,1.0,Xi,TEff,qSupp,wTilde,dNlld4xd4Q);
+
+        // NORMALIZE TO NUMBER OF SAMPLES //
+        for(int iC=0;iC<NBins;iC++){
+            
+            dNlld4xd4Q[iC] /=double(NSamples);
+        }
+        
+        
+        // CREATE OUTPUT //
+        std::ofstream OutStream;
+        OutStream.open(fname.c_str());
+        
+        OutStream << "#wTilde=" << wTilde << " #Xi=" << Xi << " #TEff=" << TEff << " #qSupp=" << qSupp << std::endl;
+        
+        double dC=2./double(NBins);
+        
+        for(int iC=0;iC<NBins;iC++){
+            
+            double CosAlpha=(iC+0.5)*dC - 1.;
+            OutStream << CosAlpha << " "<< dNlld4xd4Q[iC]/dC << std::endl;
         }
         
         OutStream.close();

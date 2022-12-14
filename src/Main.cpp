@@ -130,7 +130,19 @@ int main(int argc, char **argv) {
     // CALCULATE dN/dQ INTEGRATED OVER TIME EVOLUTION OF THE SYSTEM //
     int NTau=200;
     
-    DileptonRates::CalculatedNdQ(QMin,QMax,NQBins,NSamples,dNchdEta,Area,EtaOverS,TauMin,TauMax,NTau,"OUTPUT/dNdQ.txt");
+//    DileptonRates::CalculatedNdQ(QMin,QMax,NQBins,NSamples,dNchdEta,Area,EtaOverS,TauMin,TauMax,NTau,"OUTPUT/dNdQ.txt");
+
+    double Tau=TauMax;
+    double T,wTilde,e,pL,eQOvereG;
+    HydroAttractor::GetValues(dNchdEta,Area,EtaOverS,Tau,T,wTilde,e,pL,eQOvereG);
+    double Xi,TEff,qSupp;
+    PhaseSpaceDistribution::GetPhaseSpaceDistributionParameters(e,pL,eQOvereG,Xi,TEff,qSupp);
+    std::stringstream ss;
+    ss << "OUTPUT/DileptonCosAlphaTAU" << Tau << ".txt";
+    std::string fname=ss.str();
+
+    DileptonRates::CreatedNdCosalphaOutput(NQBins,NSamples,Xi,TEff,qSupp,wTilde,fname);
+
 
     
     // EXIT //
