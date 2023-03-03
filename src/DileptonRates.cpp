@@ -832,7 +832,7 @@ namespace DileptonRates{
         }
 
         // CALCULATE RATE //
-        CalculateRate_dNdcosalphadQ(QMin,QMax,NQBins,NCBins,NSamples,1.0,Xi,TEff,qSupp,wTilde,dNlld4xd4Q);
+        CalculateRate_dNdCosalphadQ(QMin,QMax,NQBins,NCBins,NSamples,1.0,Xi,TEff,qSupp,wTilde,dNlld4xd4Q);
 
         // NORMALIZE TO NUMBER OF SAMPLES //
         for(int iQ=0;iQ<NQBins;iQ++){
@@ -890,7 +890,7 @@ namespace DileptonRates{
             double Weight=Tau*dTau*Area;
             
             // CALCULATE RATE //
-            CalculateRate_dNdcosalphadQ(QMin,QMax,NQBins,NCBins,NSamples,Weight,Xi,TEff,qSupp,wTilde,dNlld4xd4Q);
+            CalculateRate_dNdCosalphadQ(QMin,QMax,NQBins,NCBins,NSamples,Weight,Xi,TEff,qSupp,wTilde,dNlld4xd4Q);
             
             std::cerr << "#PROGESS IS " << 100.0*(iTau+1)/double(NTau) << "% Tau=" << Tau  << std::endl;
             
