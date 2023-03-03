@@ -411,6 +411,32 @@ namespace DileptonRates{
 		double cosalpha = sLeptVec[2] / sqrt(sLeptVec[2]*sLeptVec[2] + sLeptPerp*sLeptPerp);
 		double cosalphaNeg = sLeptVecNeg[2] / sqrt(sLeptVecNeg[2]*sLeptVecNeg[2] + sLeptPerpNeg*sLeptPerpNeg);
 
+		double p3Vec[3] = {(qVec[0]+sLeptVec[0])/2, (qVec[1]+sLeptVec[1])/2, (qVec[2]+sLeptVec[2])/2};
+                double p3 = std::sqrt(p3Vec[0]*p3Vec[0]+p3Vec[1]*p3Vec[1]+p3Vec[2]*p3Vec[2]);
+                double p4Vec[3] = {(qVec[0]-sLeptVec[0])/2, (qVec[1]-sLeptVec[1])/2, (qVec[2]-sLeptVec[2])/2};
+                double p4 = std::sqrt(p4Vec[0]*p4Vec[0]+p4Vec[1]*p4Vec[1]+p4Vec[2]*p4Vec[2]);
+
+
+                double p3VecNeg[3] = {(qVec[0]+sLeptVecNeg[0])/2, (qVec[1]+sLeptVecNeg[1])/2, (qVec[2]+sLeptVecNeg[2])/2};
+                double p4VecNeg[3] = {(qVec[0]-sLeptVecNeg[0])/2, (qVec[1]-sLeptVecNeg[1])/2, (qVec[2]-sLeptVecNeg[2])/2};
+                double p3Neg = std::sqrt(p3VecNeg[0]*p3VecNeg[0]+p3VecNeg[1]*p3VecNeg[1]+p3VecNeg[2]*p3VecNeg[2]);
+                double p4Neg = std::sqrt(p4VecNeg[0]*p4VecNeg[0]+p4VecNeg[1]*p4VecNeg[1]+p4VecNeg[2]*p4VecNeg[2]);
+
+
+                double costh=0;
+                costh = 2*(p3Vec[2]*p4 - p3*p4Vec[2]);
+                costh /= sqrt(Q*Q * (Q*Q + qT*qT));
+                costh *=  qz < 0. ? -1 : 1; //sign flip according to boson rapidity
+
+                double costhNeg=0;
+                costhNeg = 2*(p3VecNeg[2]*p4Neg - p3Neg*p4VecNeg[2]);
+                costhNeg /= sqrt(Q*Q * (Q*Q + qT*qT));
+                costhNeg *=  qz < 0. ? -1 : 1; //sign flip according to boson rapidity
+
+		cosalpha=costh;
+		cosalphaNeg=costhNeg;
+
+
                 // GET PRE-FACTOR (CONTAINING JACOBIANS FOR LEPTON TENSOR INTEGRATION) //
                 double PreFactor=4*alphaEM*alphaEM/std::pow(2.0*M_PI,4)/(QSqr*QSqr)*qFSqrSum*2*M_PI*sLeptQPerp*(sLeptMax-sLeptMin)/sqrt(1-q*q/(q0*q0))/sqrt(QSqr - 4*mllSqr - sLeptQPerp*sLeptQPerp)/(4*q0)/2;
 
@@ -567,14 +593,20 @@ namespace DileptonRates{
 		double p3PerpNeg = std::sqrt(qT*qT+sLeptPerpNeg*sLeptPerpNeg+2*(qVec[0]*sLeptVecNeg[0]+qVec[1]*sLeptVecNeg[1]));
 		double p3z = (qVec[2]+sLeptVec[2])/2;
 		double p3zNeg = (qVec[2]+sLeptVecNeg[2])/2;
-		double p3 = std::sqrt(p3Perp*p3Perp+p3z*p3z);
-		double p3Neg = std::sqrt(p3PerpNeg*p3PerpNeg+p3zNeg*p3zNeg);
 
 		double p3Vec[3] = {(qVec[0]+sLeptVec[0])/2, (qVec[1]+sLeptVec[1])/2, (qVec[2]+sLeptVec[2])/2};
+                double p3 = std::sqrt(p3Vec[0]*p3Vec[0]+p3Vec[1]*p3Vec[1]+p3Vec[2]*p3Vec[2]);
+                double p4Vec[3] = {(qVec[0]-sLeptVec[0])/2, (qVec[1]-sLeptVec[1])/2, (qVec[2]-sLeptVec[2])/2};
+                double p4 = std::sqrt(p4Vec[0]*p4Vec[0]+p4Vec[1]*p4Vec[1]+p4Vec[2]*p4Vec[2]);
+
 		double vDotp = vVecUnit[0]*p3Vec[0] + vVecUnit[1]*p3Vec[1] + vVecUnit[2]*p3Vec[2]; 
 		double pvecPrime[3] = {p3Vec[0] + (gamma -1)*vDotp*vVecUnit[0] - gamma*p3*vVec[0], p3Vec[1] + (gamma -1)*vDotp*vVecUnit[1] - gamma*p3*vVec[1], p3Vec[2] + (gamma -1)*vDotp*vVecUnit[2] - gamma*p3*vVec[2]};
 
 		double p3VecNeg[3] = {(qVec[0]+sLeptVecNeg[0])/2, (qVec[1]+sLeptVecNeg[1])/2, (qVec[2]+sLeptVecNeg[2])/2};
+                double p4VecNeg[3] = {(qVec[0]-sLeptVecNeg[0])/2, (qVec[1]-sLeptVecNeg[1])/2, (qVec[2]-sLeptVecNeg[2])/2};
+                double p3Neg = std::sqrt(p3VecNeg[0]*p3VecNeg[0]+p3VecNeg[1]*p3VecNeg[1]+p3VecNeg[2]*p3VecNeg[2]);
+                double p4Neg = std::sqrt(p4VecNeg[0]*p4VecNeg[0]+p4VecNeg[1]*p4VecNeg[1]+p4VecNeg[2]*p4VecNeg[2]);
+
 		double vDotpNeg = vVecUnit[0]*p3VecNeg[0] + vVecUnit[1]*p3VecNeg[1] + vVecUnit[2]*p3VecNeg[2]; 
 		double pvecPrimeNeg[3] = {p3VecNeg[0] + (gamma -1)*vDotpNeg*vVecUnit[0] - gamma*p3Neg*vVec[0], p3VecNeg[1] + (gamma -1)*vDotpNeg*vVecUnit[1] - gamma*p3Neg*vVec[1], p3VecNeg[2] + (gamma -1)*vDotpNeg*vVecUnit[2] - gamma*p3Neg*vVec[2]};
 
@@ -583,10 +615,24 @@ namespace DileptonRates{
 
                 double sLeptZPrime = sLeptVec[2]*cosh(yQ) - sLept0*sinh(yQ);
                 double sLeptZPrimeNeg = sLeptVecNeg[2]*cosh(yQ) - sLept0Neg*sinh(yQ);
+
+		double costh=0;
+                costh = 2*(p3Vec[2]*p4 - p3*p4Vec[2]);
+                costh /= sqrt(Q*Q * (Q*Q + qT*qT));
+                costh *=  qz < 0. ? -1 : 1; //sign flip according to boson rapidity
+
+                double costhNeg=0;
+                costhNeg = 2*(p3VecNeg[2]*p4Neg - p3Neg*p4VecNeg[2]);
+                costhNeg /= sqrt(Q*Q * (Q*Q + qT*qT));
+                costhNeg *=  qz < 0. ? -1 : 1; //sign flip according to boson rapidity
+	
+
                 double cosalphaPrime = sLeptZPrime / sqrt(sLeptZPrime*sLeptZPrime + sLeptPerp*sLeptPerp);
                 double cosalphaPrimeNeg = sLeptZPrimeNeg / sqrt(sLeptZPrimeNeg*sLeptZPrimeNeg + sLeptPerpNeg*sLeptPerpNeg);
 //                cosalpha=cosalphaPrime;
 //                cosalphaNeg=cosalphaPrimeNeg;
+                cosalpha=costh;
+                cosalphaNeg=costhNeg;
 
                 
                 // GET BIN AND UPDATE DILEPTON RATE //

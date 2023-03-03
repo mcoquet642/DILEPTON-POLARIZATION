@@ -78,11 +78,12 @@ int main(int argc, char **argv) {
     
     
     // DILEPTON PARAMTERS //
-    double QMin=0.0; double QMax=10.0; int NQBins=100;
+    double QMin=0.0; double QMax=10.0; int NQBins=100; int NCBins=20;
 
     CommandlineArguments.Getval("QMin",QMin);
     CommandlineArguments.Getval("QMax",QMax);
     CommandlineArguments.Getval("NQBins",NQBins);
+    CommandlineArguments.Getval("NCBins",NCBins);
     
     double qTMin=0.0; double qTMax=10.0; double TauMin=0.0; double TauMax=2.0;
     
@@ -127,12 +128,15 @@ int main(int argc, char **argv) {
 //        DileptonRates::CreatedNdQOutput(QMin,QMax,NQBins,NSamples,Xi,TEff,qSupp,wTilde,fname);
 //    }
     
-    // CALCULATE dN/dQ INTEGRATED OVER TIME EVOLUTION OF THE SYSTEM //
     int NTau=200;
     
+    // CALCULATE dN/dQ INTEGRATED OVER TIME EVOLUTION OF THE SYSTEM //
 //    DileptonRates::CalculatedNdQ(QMin,QMax,NQBins,NSamples,dNchdEta,Area,EtaOverS,TauMin,TauMax,NTau,"OUTPUT/dNdQ.txt");
+    // CALCULATE dN/dcosThetadQ INTEGRATED OVER TIME EVOLUTION OF THE SYSTEM //
+    DileptonRates::CalculatedNdcosAlphadQ(QMin,QMax,NQBins,NCBins,NSamples,dNchdEta,Area,EtaOverS,TauMin,TauMax,NTau,"OUTPUT/dNdQdcosTheta.txt");
 
-    double Tau=TauMax;
+// CALCULATE dN/d^4x AT GIVEN TAU=TauMax
+/*    double Tau=TauMax;
     double T,wTilde,e,pL,eQOvereG;
     HydroAttractor::GetValues(dNchdEta,Area,EtaOverS,Tau,T,wTilde,e,pL,eQOvereG);
     double Xi,TEff,qSupp;
@@ -141,7 +145,7 @@ int main(int argc, char **argv) {
     ss << "OUTPUT/DileptonCosAlphaTAU" << Tau << ".txt";
     std::string fname=ss.str();
 
-    DileptonRates::CreatedNdCosalphaOutput(NQBins,NSamples,Xi,TEff,qSupp,wTilde,fname);
+    DileptonRates::CreatedNdCosalphaOutput(NQBins,NSamples,Xi,TEff,qSupp,wTilde,fname);*/
 
 
     
